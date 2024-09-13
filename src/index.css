@@ -1,5 +1,5 @@
-@import url('./overrides.css');
-@import url('./variables.css');
+@import url('./styles/overrides.css');
+@import url('./styles/variables.css');
 
 body {
   padding: 0;
