@@ -3,12 +3,3 @@
 .ant-slider-dot {
   visibility: hidden;
 }
-
-.amt-slider-mark-text,
-.ant-slider-mark-text-active {
-  color: rgba(0, 0, 0, 0.45);
-}
-
-:where(.css-dev-only-do-not-override-qnu6hi).ant-slider .ant-slider-mark-text-active {
-  color: rgba(0, 0, 0, 0.88) !important;
-}
