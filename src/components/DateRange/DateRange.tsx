@@ -14,22 +14,31 @@ interface DateRangeProps {
 const DateRange = (props: DateRangeProps) => {
   const { mode, minDate, maxDate, startDate, endDate } = props;
 
+  const MARK_WIDTH = 35;
+
   const rangeContainerRef = useRef<HTMLDivElement>(null);
   const [rangeContainerWidth, setRangeContainerWidth] = useState<number>(0);
 
   const totalMonths = maxDate.diff(minDate, 'month');
+  const totalYears = maxDate.diff(minDate, 'years');
   const startMonth = startDate.diff(minDate, 'month');
   const endMonth = endDate.diff(minDate, 'month');
 
   const getMarkStep = (totalMonths: number, containerWidth: number) => {
-    const markWidth = 32;
-    const totalSpaceNeeded = totalMonths * markWidth;
+    const totalSpaceNeeded = totalMonths * MARK_WIDTH;
+    let step;
 
     if (containerWidth >= totalSpaceNeeded) {
-      return 1;
+      step = 1;
+      return step;
     } else {
-      const visibleMarks = Math.floor(containerWidth / markWidth);
-      return Math.ceil(totalMonths / visibleMarks);
+      const visibleMarks = Math.floor(containerWidth / MARK_WIDTH);
+      step = Math.ceil(totalMonths / visibleMarks);
+      if (step % 2 === 0) {
+        return step;
+      } else {
+        return step + 1;
+      }
     }
   };
 
@@ -45,24 +54,55 @@ const DateRange = (props: DateRangeProps) => {
   const getDateMarks = (minDate: Dayjs, totalMonths: number) => {
     const marks: Record<number, string | { style: object; label: JSX.Element }> = {};
 
-    const step = getMarkStep(totalMonths, rangeContainerWidth);
+    const yearStep = getMarkStep(totalYears, rangeContainerWidth);
+    const monthStep = getMarkStep(totalMonths, rangeContainerWidth);
+
+    const styleYearMark = (date: Dayjs) => {
+      return {
+        style: {
+          color: 'rgba(0, 0, 0, 0.88)',
+        },
+        label: <span>{date.format('YYYY')}</span>,
+      };
+    };
 
     for (let i = 0; i <= totalMonths; i++) {
       const currentDate = minDate.add(i, 'month');
 
-      if (currentDate.month() === 0) {
-        if (mode === 'months') {
-          marks[i] = {
-            style: {
-              color: 'rgba(0, 0, 0, 0.88)',
-            },
-            label: <span>{currentDate.format('YYYY')}</span>,
-          };
-        } else {
-          marks[i] = currentDate.format('YYYY');
+      if (mode === 'months') {
+        if (monthStep === 1) {
+          if (currentDate.month() === 0) {
+            marks[i] = styleYearMark(currentDate);
+          } else {
+            marks[i] = currentDate.format('MMM');
+          }
+        } else if (monthStep > 1 && monthStep <= 6) {
+          if (currentDate.month() === 0) {
+            marks[i] = styleYearMark(currentDate);
+          } else if (i % monthStep === 0) {
+            marks[i] = currentDate.format('MMM');
+          }
+        } else if (monthStep > 6 && yearStep > 1) {
+          if (i === 0 || i === totalMonths) {
+            marks[i] = styleYearMark(currentDate);
+          } else if (currentDate.month() === 0 && i % (yearStep * 12) === 0) {
+            marks[i] = styleYearMark(currentDate);
+          }
+        } else if (monthStep > 6) {
+          if (currentDate.month() === 0) {
+            marks[i] = styleYearMark(currentDate);
+          }
         }
-      } else if (mode === 'months' && i % step === 0) {
-        marks[i] = currentDate.format('MMM');
+      } else if (mode === 'years') {
+        if (yearStep === 1) {
+          if (currentDate.month() === 0) {
+            marks[i] = currentDate.format('YYYY');
+          }
+        } else {
+          if (currentDate.month() === 0 && i % (yearStep * 12) === 0) {
+            marks[i] = currentDate.format('YYYY');
+          }
+        }
       }
     }
 
